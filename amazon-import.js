@@ -21,6 +21,7 @@ function GM_addStyle(css, id) {
   const sheet = style.sheet;
   sheet.insertRule(css, (sheet.rules || sheet.cssRules || []).length);
 }
+// injecting css
 GM_addStyle(
   `
   .bb-btn{  
@@ -178,7 +179,7 @@ window.onload = () => {
   }
   try {
     // Setting up UI
-    const submitUrl = "http://localhost:9099/edition/create";
+    const submitUrl = "https://bookbrainz.org/edition/create";
     const parentEl = document.getElementById("rightCol");
     const askButton = document.createElement("button");
     const divContainer = document.createElement("div");
