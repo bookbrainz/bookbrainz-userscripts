@@ -1,8 +1,7 @@
 // ==UserScript==
 // @name        BookBrainz: Import from Amazon
-// @include     *://www.amazon.*/*/dp/*
+// @include     *://www.amazon.in/*/dp/*
 // @version     0.0.1
-// @grant GM_addStyle
 // @author      tr1ten
 // @description Import releases from Amazon
 // @run-at      document-end
@@ -136,9 +135,11 @@ function scrapeAmz() {
     weight: "Item Weight",
     dimensions: "Dimensions",
   };
+  const reverseProdDetailsMap = Object.fromEntries(
+    Object.entries(prodDetailsMap).map((b) => b.reverse())
+  );
   let key, value;
   res = {};
-  console.log("loop start!");
   for (let index = 0; index < Object.keys(prodDetailsMap).length; index++) {
     let ls = prodDetails.children[index].innerText.split(":");
     key = ls[0]
@@ -149,49 +150,70 @@ function scrapeAmz() {
       .replace(/\u200f/g, "")
       .replace(/\u200e/g, "")
       .trim();
-    res[Object.keys(prodDetailsMap)[index]] = value;
+    res[reverseProdDetailsMap[key]] = value;
   }
-  let [height, width, depth] = res.dimensions.replace("cm", "").split("x");
+  let [height, width, depth] = res.dimensions?.replace("cm", "")?.split("x");
   let publisher, date;
-  publisher = res.publisher.split("(")[0].trim();
-  date = new Date(res.publisher.split("(")[1].replace(")", ""));
+  publisher = res.publisher?.split("(")[0]?.trim();
+  date = new Date(res.publisher?.split("(")[1]?.replace(")", ""));
   console.log("date and publisher ", date, publisher);
-  date = date.toISOString().split("T")[0];
+  date = date?.toISOString()?.split("T")[0];
 
   delete res["dimensions"];
   return {
     name,
     sortName,
     ...res,
-    height: height.trim(),
-    width: width.trim(),
-    depth: depth.trim(),
+    height: height?.trim(),
+    width: width?.trim(),
+    depth: depth?.trim(),
     date,
     publisher,
   };
 }
 window.onload = () => {
   console.log("running amazon import to bb script");
-  if(!document.querySelector("#authorFollowHeading"))
-  {
+  if (!document.querySelector("#authorFollowHeading")) {
     return;
   }
   try {
     // Setting up UI
-    const submitUrl="https://bookbrainz.org/edition/create";
+    const submitUrl = "http://localhost:9099/edition/create";
     const parentEl = document.getElementById("rightCol");
     const askButton = document.createElement("button");
     const divContainer = document.createElement("div");
     askButton.classList.add("bb-btn");
     askButton.innerText = "Import to BookBrainz";
     parentEl.insertBefore(askButton, parentEl.children[0]);
-    let itemDetails = scrapeAmz();
+    const expectedOut = {
+      name: "",
+      sortName: "",
+      publisher: "",
+      language: "",
+      pages: "",
+      isbn10: "",
+      isbn13: "",
+      weight: "",
+      height: "",
+      width: "",
+      depth: "",
+      date: "",
+      publisher: "",
+    };
+
+    let itemDetails;
+    try {
+      itemDetails = scrapeAmz();
+    } catch {
+      console.log("error whilte fetching moving to default");
+      itemDetails = expectedOut;
+    }
     console.log("recieved scrape data ", itemDetails);
     const formHtml = `
     <h2>Verify Form before submitting</h2>
 <div class="bb-container">
 <h3 class="bb-h3">Edition Entity</h3>
-    <form class="bb-form" action=${submitUrl} method="POST">
+    <form target="_blank' class="bb-form" action=${submitUrl} method="POST">
     <label class="bb-flabel" for="bb-name">Name</label>
     <input class="bb-finput" name="nameSection.name" value="${
       itemDetails.name
@@ -204,6 +226,14 @@ window.onload = () => {
     <input class="bb-finput" name="nameSection.language" value="${
       itemDetails.language
     }" id="bb-language"/>
+    <label class="bb-flabel" for="bb-isbn13">ISBN 13</label>
+    <input class="bb-finput" name="identifierEditor.t9" value="${
+      itemDetails.isbn13 ?? ""
+    }" id="bb-isbn13"/>
+    <label class="bb-flabchromeel" for="bb-isbn10">ISBN 10</label>
+    <input class="bb-finput" name="identifierEditor.t10" value="${
+      itemDetails.isbn10 ?? ""
+    }" id="bb-isbn10"/>
     <label class="bb-flabel" for="bb-pub">Publisher</label>
     <input class="bb-finput"  value="${itemDetails.publisher}" id="bb-pub"/>
     <label class="bb-flabel" for="bb-date">Start date:</label>
@@ -213,29 +243,32 @@ window.onload = () => {
     <label class="bb-flabel" for="bb-format">Format</label>
     <input class="bb-finput" name="editionSection.format" value="Paperback" id="bb-format"/>
     <label class="bb-flabel" for="bb-pgcount">Page count</label>
-    <input class="bb-finput" ame="editionSection.pages" value=${parseInt(
+    <input class="bb-finput" name="editionSection.pages" value=${parseInt(
       itemDetails.pages
     )} id="bb-pgcount" type="number"/>
     <label class="bb-flabel" for="bb-width">Width</label>
-    <input class="bb-finput" value=${parseFloat(
+    <input name="editionSection.width" class="bb-finput" value=${parseFloat(
       itemDetails.width
     )} id="bb-width" type="number"/>
     <label class="bb-flabel" for="bb-height">Height</label>
-    <input class="bb-finput" value=${parseFloat(
+    <input name="editionSection.height" class="bb-finput" value=${parseFloat(
       itemDetails.height
-    )} value=${parseFloat(itemDetails.height)} id="bb-height" type="number"/>
+    )} id="bb-height" type="number"/>
     <label class="bb-flabel" for="bb-depth">Depth</label>
-    <input class="bb-finput" value=${parseFloat(
+    <input name="editionSection.depth" class="bb-finput"  value=${parseFloat(
       itemDetails.depth
-    )}  value=${parseFloat(itemDetails.depth)} id="bb-depth" type="number"/>
+    )} id="bb-depth" type="number"/>
+    <label class="bb-flabel" for="bb-weight">weight</label>
+    <input name="editionSection.weight" class="bb-finput" value=${parseFloat(
+      itemDetails.weight
+    )} id="bb-depth" type="number"/>
     <button class="bb-btn">Submit</button>
     <button class="bb-btn" id="bb-cancel">Cancel</button>
-</div>
     </form>
+    </div>
     `;
     divContainer.innerHTML = formHtml;
     askButton.onclick = () => {
-      console.log("btn clicked");
       parentEl.removeChild(askButton);
       parentEl.insertBefore(divContainer, parentEl.children[0]);
       document.getElementById("bb-cancel").onclick = () => {
