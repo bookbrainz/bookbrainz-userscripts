@@ -171,7 +171,7 @@ function scrapeAmz() {
   let lenghtToSIkey = depth.match(/[A-Za-z]+/gi)[0];
   let wtToSIkey = res.weight.match(/[A-Za-z]+/gi)[0];
   let publisher;
-  publisher = res.publisher?.split("(")[0]?.trim();
+  publisher = res.publisher?.split(";")[0]?.split("(")[0]?.trim();
   date = new Date(date);
   date = date?.toISOString()?.split("T")[0];
 
@@ -254,7 +254,7 @@ window.onload = () => {
       itemDetails.isbn10 ?? ""
     }" id="bb-isbn10"/>
     <label class="bb-flabel" for="bb-pub">Publisher</label>
-    <input class="bb-finput"  value="${itemDetails.publisher}" id="bb-pub"/>
+    <input class="bb-finput" name="editionSection.publisher"  value="${itemDetails.publisher}" id="bb-pub"/>
     <label class="bb-flabel" for="bb-date">Start date:</label>
     <input class="bb-finput" name="editionSection.releaseDate" type="date" value=${
       itemDetails.date
