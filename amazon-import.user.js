@@ -155,7 +155,7 @@ function scrapeAmz() {
   date = new Date(date.replace(".", "")); // temporary fix for unsupported dates like `20 Oct. 2021`
   date = [
     date.getFullYear(),
-    ((date.getMonth() < 10) ? "0" : "") + `${date.getMonth() + 1}`,
+    (date.getMonth() < 10 ? "0" : "") + `${date.getMonth() + 1}`,
     date.getDate(),
   ].join("-");
 
@@ -184,6 +184,8 @@ window.onload = () => {
     const parentEl = document.getElementById("rightCol");
     const askButton = document.createElement("button");
     const divContainer = document.createElement("div");
+    const submissionNote = `Imported from Amazon\nsource: ${window.location.toString()}\nscript: amazon-import\nversion: 0.0.1 
+    `;
     askButton.classList.add("bb-btn");
     askButton.innerText = "Import to BookBrainz";
     parentEl.insertBefore(askButton, parentEl.children[0]);
@@ -241,7 +243,7 @@ window.onload = () => {
     <input class="bb-finput" name="editionSection.publisher"  value="${
       itemDetails.publisher
     }" id="bb-pub"/>
-    <label class="bb-flabel" for="bb-date">Start date:</label>
+    <label class="bb-flabel" for="bb-date">Release Date</label>
     <input class="bb-finput" name="editionSection.releaseDate" type="date" value=${
       itemDetails.date
     } id="bb-date" name="" value="2018-07-22">
@@ -269,6 +271,8 @@ window.onload = () => {
     <input name="editionSection.weight" class="bb-finput" value=${parseInt(
       itemDetails.weight
     )} id="bb-depth" type="number"/>
+    <label class="bb-flabel" for="bb-sbnote">Submission Note</label>
+    <textarea class="bb-finput" name="submissionSection" id="bb-format">${submissionNote}</textarea>
     <button class="bb-btn">Submit</button>
     <button class="bb-btn" id="bb-cancel">Cancel</button>
     </form>
