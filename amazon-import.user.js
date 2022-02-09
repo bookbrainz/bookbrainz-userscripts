@@ -8,7 +8,7 @@
 // ==/UserScript==
 
 "use strict";
-function GM_addStyle(css, id) {
+function GM_addStyle(cssRules, id) {
   const style =
     document.getElementById(id) ||
     (function () {
@@ -19,10 +19,12 @@ function GM_addStyle(css, id) {
       return style;
     })();
   const sheet = style.sheet;
-  sheet.insertRule(css, (sheet.rules || sheet.cssRules || []).length);
+  for (const rule of cssRules) {
+    sheet.insertRule(rule, (sheet.rules || sheet.cssRules || []).length);
+  }
 }
 // injecting css
-GM_addStyle(
+const cssRules = [
   `
   .bb-btn{  
     padding:0.4em;
@@ -33,18 +35,12 @@ GM_addStyle(
 
   }
 `,
-  "bookbrainz"
-);
-GM_addStyle(
   `
   #bb-cancel{  
     background-color:red;
 
   }
 `,
-  "bookbrainz"
-);
-GM_addStyle(
   `
   .bb-btn:hover{
     cursor:pointer;
@@ -52,18 +48,12 @@ GM_addStyle(
     color: white;
   }
 `,
-  "bookbrainz"
-);
-GM_addStyle(
   `
   .bb-finput{
     margin-bottom:0.4em
     }
 
 `,
-  "bookbrainz"
-);
-GM_addStyle(
   `
   .bb-form{
     display:flex;
@@ -76,10 +66,6 @@ GM_addStyle(
     }
 
 `,
-  "bookbrainz"
-);
-
-GM_addStyle(
   `
   .bb-flabel {
     margin-bottom:0.5em;
@@ -89,9 +75,6 @@ GM_addStyle(
    }
 
 `,
-  "bookbrainz"
-);
-GM_addStyle(
   `
 
   .bb-container{
@@ -104,9 +87,6 @@ GM_addStyle(
       margin:1em;
     }
 `,
-  "bookbrainz"
-);
-GM_addStyle(
   `
   .bb-h3{
     padding:0.4em;
@@ -118,13 +98,13 @@ GM_addStyle(
       
     }
 `,
-  "bookbrainz"
-);
-const convertToSI = {
-  cm: 1,
+];
+GM_addStyle(cssRules, "bookbrainz");
+const convertToBB = {
+  cm: 10,
   g: 1,
   pounds: 453.6,
-  ounces:28.3,
+  ounces: 28.3,
   inches: 2.5,
 };
 // #productTitle Name/Sort Name
@@ -169,21 +149,25 @@ function scrapeAmz() {
   }
   let [height, width, depth] = res.dimensions?.split("x");
   let lenghtToSIkey = depth.match(/[A-Za-z]+/gi)[0];
-  let wtToSIkey = res.weight.match(/[A-Za-z]+/gi)[0];
+  let wtToSIkey = res.weight?.match(/[A-Za-z]+/gi)[0];
   let publisher;
   publisher = res.publisher?.split(";")[0]?.split("(")[0]?.trim();
-  date = new Date(date);
-  date = date?.toISOString()?.split("T")[0];
+  date = new Date(date.replace(".", "")); // temporary fix for unsupported dates like `20 Oct. 2021`
+  date = [
+    date.getFullYear(),
+    ((date.getMonth() < 10) ? "0" : "") + `${date.getMonth() + 1}`,
+    date.getDate(),
+  ].join("-");
 
   delete res["dimensions"];
   return {
     name,
     sortName,
     ...res,
-    weight: parseInt(res.weight) * (convertToSI[wtToSIkey]??1),
-    height: parseFloat(height) * (convertToSI[lenghtToSIkey] ?? 1),
-    width: parseFloat(width) * (convertToSI[lenghtToSIkey] ?? 1),
-    depth: parseFloat(depth) * (convertToSI[lenghtToSIkey] ?? 1),
+    weight: parseInt(res.weight) * (convertToBB[wtToSIkey] ?? 1),
+    height: parseFloat(height) * (convertToBB[lenghtToSIkey] ?? 1),
+    width: parseFloat(width) * (convertToBB[lenghtToSIkey] ?? 1),
+    depth: parseFloat(depth) * (convertToBB[lenghtToSIkey] ?? 1),
     date,
     publisher,
     format,
@@ -196,7 +180,7 @@ window.onload = () => {
   }
   try {
     // Setting up UI
-    const submitUrl = "https://bookbrainz.org/edition/create";
+    const submitUrl = "https://test.bookbrainz.org/edition/create";
     const parentEl = document.getElementById("rightCol");
     const askButton = document.createElement("button");
     const divContainer = document.createElement("div");
@@ -254,7 +238,9 @@ window.onload = () => {
       itemDetails.isbn10 ?? ""
     }" id="bb-isbn10"/>
     <label class="bb-flabel" for="bb-pub">Publisher</label>
-    <input class="bb-finput" name="editionSection.publisher"  value="${itemDetails.publisher}" id="bb-pub"/>
+    <input class="bb-finput" name="editionSection.publisher"  value="${
+      itemDetails.publisher
+    }" id="bb-pub"/>
     <label class="bb-flabel" for="bb-date">Start date:</label>
     <input class="bb-finput" name="editionSection.releaseDate" type="date" value=${
       itemDetails.date
