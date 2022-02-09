@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        BookBrainz: Import from Amazon
-// @include     *://www.amazon.*/*/dp/*
+// @include     *://www.amazon.*/*
 // @version     0.0.1
 // @author      tr1ten
 // @description Import releases from Amazon
@@ -105,7 +105,7 @@ const convertToBB = {
   g: 1,
   pounds: 453.6,
   ounces: 28.3,
-  inches: 2.5,
+  inches: 25.4,
 };
 // #productTitle Name/Sort Name
 // ul.a-spacing-none:nth-child(1) Language/Pages/Dimensions/Weight/Publisher(Date)/ISBNs
@@ -153,9 +153,13 @@ function scrapeAmz() {
   let publisher;
   publisher = res.publisher?.split(";")[0]?.split("(")[0]?.trim();
   date = new Date(date.replace(".", "")); // temporary fix for unsupported dates like `20 Oct. 2021`
-  date = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
-    .map((component) => String(component).padStart(2, "0"))
-    .join("-");
+  if (date instanceof Date && !isNaN(date)) {
+    date = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+      .map((component) => String(component).padStart(2, "0"))
+      .join("-");
+  } else {
+    date = "";
+  }
 
   delete res["dimensions"];
   return {
