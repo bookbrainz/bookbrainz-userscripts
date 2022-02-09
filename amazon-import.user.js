@@ -153,11 +153,9 @@ function scrapeAmz() {
   let publisher;
   publisher = res.publisher?.split(";")[0]?.split("(")[0]?.trim();
   date = new Date(date.replace(".", "")); // temporary fix for unsupported dates like `20 Oct. 2021`
-  date = [
-    date.getFullYear(),
-    (date.getMonth() < 10 ? "0" : "") + `${date.getMonth() + 1}`,
-    date.getDate(),
-  ].join("-");
+  date = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+    .map((component) => String(component).padStart(2, "0"))
+    .join("-");
 
   delete res["dimensions"];
   return {
@@ -218,7 +216,7 @@ window.onload = () => {
     <h2>Verify Form before submitting</h2>
 <div class="bb-container">
 <h3 class="bb-h3">Edition Entity</h3>
-    <form target="_blank' class="bb-form" action=${submitUrl} method="POST">
+    <form target="_blank" class="bb-form" action="${submitUrl}" method="POST">
     <label class="bb-flabel" for="bb-name">Name</label>
     <input class="bb-finput" name="nameSection.name" value="${
       itemDetails.name
@@ -246,7 +244,7 @@ window.onload = () => {
     <label class="bb-flabel" for="bb-date">Release Date</label>
     <input class="bb-finput" name="editionSection.releaseDate" type="date" value=${
       itemDetails.date
-    } id="bb-date" name="" value="2018-07-22">
+    } id="bb-date">
     <label class="bb-flabel" for="bb-format">Format</label>
     <input class="bb-finput" name="editionSection.format" value="${
       itemDetails.format
@@ -273,7 +271,7 @@ window.onload = () => {
     )} id="bb-depth" type="number"/>
     <label class="bb-flabel" for="bb-sbnote">Submission Note</label>
     <textarea class="bb-finput" name="submissionSection" id="bb-format">${submissionNote}</textarea>
-    <button class="bb-btn">Submit</button>
+    <button class="bb-btn" type="submit">Submit</button>
     <button class="bb-btn" id="bb-cancel">Cancel</button>
     </form>
     </div>
