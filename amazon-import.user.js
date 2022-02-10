@@ -107,15 +107,7 @@ const convertToBB = {
   ounces: 28.3,
   inches: 25.4,
 };
-// not always work!, Stackoverflow https://stackoverflow.com/questions/1764605/scrape-asin-from-amazon-url-using-javascript
-function ExtractASIN(url) {
-  var ASINreg = new RegExp(/(?:\/)([A-Z0-9]{10})(?:$|\/|\?)/);
-  var cMatch = url.match(ASINreg);
-  if (cMatch == null) {
-    return null;
-  }
-  return cMatch[1];
-}
+
 // #productTitle Name/Sort Name
 // ul.a-spacing-none:nth-child(1) Language/Pages/Dimensions/Weight/Publisher(Date)/ISBNs
 function scrapeAmz() {
@@ -132,6 +124,7 @@ function scrapeAmz() {
     pages: format.trim(),
     isbn10: "ISBN-10",
     isbn13: "ISBN-13",
+    asin: "ASIN",
     weight: "Item Weight",
     dimensions: "Dimensions",
   };
@@ -174,7 +167,6 @@ function scrapeAmz() {
 
   delete res["dimensions"];
   return {
-    asin: ExtractASIN(window.location.toLocaleString()),
     name,
     sortName,
     ...res,
@@ -255,8 +247,8 @@ window.onload = () => {
       itemDetails.isbn10 ?? ""
     }" id="bb-isbn10"/>
     <label class="bb-flabel" for="bb-asin">ASIN</label>
-    <input class="bb-finput" name="identifierEditor.t10" value="${
-      itemDetails.asin ?? ""
+    <input class="bb-finput" name="identifierEditor.t5" value="${
+      itemDetails.asin ?? itemDetails.isbn10
     }" id="bb-asin"/>
     <label class="bb-flabel" for="bb-pub">Publisher</label>
     <input class="bb-finput" name="editionSection.publisher"  value="${
