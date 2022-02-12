@@ -130,12 +130,14 @@ window.onload = () => {
   }
   try {
     // Setting up UI
-    const submitUrl = "http://localhost:9099/edition/create";
+    const submitUrl = "https://test.bookbrainz.com/edition/create";
     const parentEl = document.getElementById("rightCol");
     const askButton = document.createElement("button");
     const divContainer = document.createElement("div");
+    const amzPattern = RegExp("^(?:https?://)?(www[^/]+).*?(/[dg]p/[^/]+).*");
+    const prodUrl = window.location.toLocaleString().replace(amzPattern,"$1$2")
     const submissionNote = `Imported from Amazon\nsource: ${
-      window.location.toString().split("?")[0]
+      prodUrl
     }\nscript: amazon-import\nversion: 0.0.1 
     `;
     askButton.classList.add("bb-btn");
