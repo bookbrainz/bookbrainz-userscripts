@@ -27,76 +27,19 @@ function GM_addStyle(cssRules, id) {
 const cssRules = [
   `
   .bb-btn{  
-    padding:0.4em;
-    margin:0.5em;
-      color: white;
-      background-color: #04aa6d;
-      border:none;
-
-  }
-`,
-  `
-  #bb-cancel{  
-    background-color:red;
+    width: 100%;
+    height: 24px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    background: linear-gradient(to bottom, #f7f8fa, #e7e9ec);
+    margin: 10px 0px;
 
   }
 `,
   `
   .bb-btn:hover{
     cursor:pointer;
-    background-color: #eb743b;
-    color: white;
   }
-`,
-  `
-  .bb-finput{
-    margin-bottom:0.4em
-    }
-
-`,
-  `
-  .bb-form{
-    display:flex;
-     flex-direction:column;
-      justify-content:center;
-      width:min-content;
-      padding:0.8em;
-      font-family:'mono', sans-serif;
-      
-    }
-
-`,
-  `
-  .bb-flabel {
-    margin-bottom:0.5em;
-     margin-top:0.1em;
-     font-size:1rem;
-     font-weight:700;
-   }
-
-`,
-  `
-
-  .bb-container{
-    border:2px solid black;
-      border-radius:10px;
-      display:flex;
-     flex-direction:column;
-      justify-content:center;
-      width:min-content;
-      margin:1em;
-    }
-`,
-  `
-  .bb-h3{
-    padding:0.4em;
-      background-color:#754e37;
-      margin:0;
-      border-radius:8px;
-      text-align:center;
-      color:white;
-      
-    }
 `,
 ];
 GM_addStyle(cssRules, "bookbrainz");
@@ -114,7 +57,8 @@ function scrapeAmz() {
   let name, sortName;
   name = sortName = document
     .getElementById("productTitle")
-    .innerText.replace(/"/g, "'");
+    ?.innerText.replace(/"/g, "'")
+    ?.trim();
   const prodDetails = document.querySelector("ul.a-spacing-none:nth-child(1)");
   const subtitleEl = document.getElementById("productSubtitle");
   let [format, date, ...res] = subtitleEl.innerText.split(" – ");
@@ -152,8 +96,8 @@ function scrapeAmz() {
     }
   }
   let [height, width, depth] = res.dimensions?.split("x");
-  let lenghtToSIkey = depth.match(/[A-Za-z]+/gi)[0];
-  let wtToSIkey = res.weight?.match(/[A-Za-z]+/gi)[0];
+  let lenghtToBBKey = depth.match(/[A-Za-z]+/gi)[0];
+  let wtToBBKey = res.weight?.match(/[A-Za-z]+/gi)[0];
   let publisher;
   publisher = res.publisher?.split(";")[0]?.split("(")[0]?.trim();
   date = new Date(date.replace(".", "")); // temporary fix for unsupported dates like `20 Oct. 2021`
@@ -170,10 +114,10 @@ function scrapeAmz() {
     name,
     sortName,
     ...res,
-    weight: parseInt(res.weight) * (convertToBB[wtToSIkey] ?? 1),
-    height: parseFloat(height) * (convertToBB[lenghtToSIkey] ?? 1),
-    width: parseFloat(width) * (convertToBB[lenghtToSIkey] ?? 1),
-    depth: parseFloat(depth) * (convertToBB[lenghtToSIkey] ?? 1),
+    weight: parseInt(res.weight) * (convertToBB[wtToBBKey] ?? 1),
+    height: parseFloat(height) * (convertToBB[lenghtToBBKey] ?? 1),
+    width: parseFloat(width) * (convertToBB[lenghtToBBKey] ?? 1),
+    depth: parseFloat(depth) * (convertToBB[lenghtToBBKey] ?? 1),
     date,
     publisher,
     format,
@@ -186,11 +130,13 @@ window.onload = () => {
   }
   try {
     // Setting up UI
-    const submitUrl = "https://test.bookbrainz.org/edition/create";
+    const submitUrl = "http://localhost:9099/edition/create";
     const parentEl = document.getElementById("rightCol");
     const askButton = document.createElement("button");
     const divContainer = document.createElement("div");
-    const submissionNote = `Imported from Amazon\nsource: ${window.location.toString()}\nscript: amazon-import\nversion: 0.0.1 
+    const submissionNote = `Imported from Amazon\nsource: ${
+      window.location.toString().split("?")[0]
+    }\nscript: amazon-import\nversion: 0.0.1 
     `;
     askButton.classList.add("bb-btn");
     askButton.innerText = "Import to BookBrainz";
@@ -217,86 +163,63 @@ window.onload = () => {
     try {
       itemDetails = scrapeAmz();
     } catch (err) {
-      console.log("error whilte fetching moving to default, ", err);
+      console.log("error whilte fetching, moving to default, ", err);
       itemDetails = expectedOut;
     }
     console.log("recieved scrape data ", itemDetails);
     const formHtml = `
-    <h2>Verify Form before submitting</h2>
-<div class="bb-container">
-<h3 class="bb-h3">Edition Entity</h3>
+  <h3 class="bb-h3">Edition Entity</h3>
     <form target="_blank" class="bb-form" action="${submitUrl}" method="POST">
-    <label class="bb-flabel" for="bb-name">Name</label>
-    <input class="bb-finput" name="nameSection.name" value="${
-      itemDetails.name
-    }" id="bb-name"/>
-    <label class="bb-flabel" for="bb-sname">Sort Name</label>
-    <input class="bb-finput" name="nameSection.sortName" value="${
+    <input name="nameSection.name" value="${itemDetails.name}" id="bb-name"/>
+    <input name="nameSection.sortName" value="${
       itemDetails.sortName
     }" id="bb-sname"/>
-    <label class="bb-flabel" for="bb-language">Language</label>
-    <input class="bb-finput" name="nameSection.language" value="${
+    <input name="nameSection.language" value="${
       itemDetails.language
     }" id="bb-language"/>
-    <label class="bb-flabel" for="bb-isbn13">ISBN 13</label>
-    <input class="bb-finput" name="identifierEditor.t9" value="${
+    <input name="identifierEditor.t9" value="${
       itemDetails.isbn13 ?? ""
     }" id="bb-isbn13"/>
-    <label class="bb-flabchromeel" for="bb-isbn10">ISBN 10</label>
-    <input class="bb-finput" name="identifierEditor.t10" value="${
+    <input name="identifierEditor.t10" value="${
       itemDetails.isbn10 ?? ""
     }" id="bb-isbn10"/>
-    <label class="bb-flabel" for="bb-asin">ASIN</label>
-    <input class="bb-finput" name="identifierEditor.t5" value="${
+    <input name="identifierEditor.t5" value="${
       itemDetails.asin ?? itemDetails.isbn10
     }" id="bb-asin"/>
-    <label class="bb-flabel" for="bb-pub">Publisher</label>
-    <input class="bb-finput" name="editionSection.publisher"  value="${
+    <input name="editionSection.publisher"  value="${
       itemDetails.publisher
     }" id="bb-pub"/>
-    <label class="bb-flabel" for="bb-date">Release Date</label>
-    <input class="bb-finput" name="editionSection.releaseDate" type="date" value=${
+    <input name="editionSection.releaseDate" type="date" value=${
       itemDetails.date
     } id="bb-date">
-    <label class="bb-flabel" for="bb-format">Format</label>
-    <input class="bb-finput" name="editionSection.format" value="${
+    <input name="editionSection.format" value="${
       itemDetails.format
     }" id="bb-format"/>
-    <label class="bb-flabel" for="bb-pgcount">Page count</label>
-    <input class="bb-finput" name="editionSection.pages" value="${parseInt(
+    <input name="editionSection.pages" value="${parseInt(
       itemDetails.pages
     )}" id="bb-pgcount" type="number"/>
-    <label class="bb-flabel" for="bb-width">Width</label>
-    <input name="editionSection.width" class="bb-finput" value=${parseInt(
+    <input name="editionSection.width" value=${parseInt(
       itemDetails.width
     )} id="bb-width" type="number"/>
-    <label class="bb-flabel" for="bb-height">Height</label>
-    <input name="editionSection.height" class="bb-finput" value=${parseInt(
+    <input name="editionSection.height" value=${parseInt(
       itemDetails.height
     )} id="bb-height" type="number"/>
-    <label class="bb-flabel" for="bb-depth">Depth</label>
-    <input name="editionSection.depth" class="bb-finput"  value=${parseInt(
+    <input name="editionSection.depth"  value=${parseInt(
       itemDetails.depth
     )} id="bb-depth" type="number"/>
-    <label class="bb-flabel" for="bb-weight">Weight</label>
-    <input name="editionSection.weight" class="bb-finput" value=${parseInt(
+    <input name="editionSection.weight" value=${parseInt(
       itemDetails.weight
     )} id="bb-depth" type="number"/>
-    <label class="bb-flabel" for="bb-sbnote">Submission Note</label>
-    <textarea class="bb-finput" name="submissionSection" id="bb-format">${submissionNote}</textarea>
-    <button class="bb-btn" type="submit">Submit</button>
-    <button class="bb-btn" id="bb-cancel">Cancel</button>
+    <textarea name="submissionSection" id="bb-format">${submissionNote}</textarea>
+    <button type="submit" id="bb-submit" >Submit</button>
     </form>
-    </div>
     `;
+    divContainer.style.display = "none";
     divContainer.innerHTML = formHtml;
+    divContainer.className = "bb-container";
+    parentEl.insertBefore(divContainer, parentEl.children[0]);
     askButton.onclick = () => {
-      parentEl.removeChild(askButton);
-      parentEl.insertBefore(divContainer, parentEl.children[0]);
-      document.getElementById("bb-cancel").onclick = () => {
-        parentEl.removeChild(divContainer);
-        parentEl.insertBefore(askButton, parentEl.children[0]);
-      };
+      document.getElementById("bb-submit").click();
     };
   } catch (err) {
     console.log("error occured while running  script ", err);
