@@ -130,7 +130,7 @@ window.onload = () => {
   }
   try {
     // Setting up UI
-    const submitUrl = "https://test.bookbrainz.com/edition/create";
+    const submitUrl = "https://test.bookbrainz.org/edition/create";
     const parentEl = document.getElementById("rightCol");
     const askButton = document.createElement("button");
     const divContainer = document.createElement("div");
