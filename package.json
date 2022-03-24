@@ -1,0 +1,17 @@
+{
+  "name": "bookbrainz-userscripts",
+  "version": "1.0.0",
+  "repository": "https://github.com/bookbrainz/bookbrainz-userscripts.git",
+  "author": "tri10 <shubhi.blog@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "babel src -d build",
+    "clean": "rm -rf build"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/cli": "^7.17.6",
+    "@babel/core": "^7.17.8",
+    "@babel/preset-env": "^7.16.11"
+  }
+}

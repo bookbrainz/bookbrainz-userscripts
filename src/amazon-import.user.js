@@ -95,12 +95,18 @@ function scrapeAmz() {
       res[reverseProdDetailsMap[key]] = value;
     }
   }
-  let [height, width, depth] = res.dimensions?.split("x");
-  let lenghtToBBKey = depth.match(/[A-Za-z]+/gi)[0];
+  let lenghtToBBKey;
+  let height, width, depth;
+  if(res.dimensions)
+  {
+
+    [height, width, depth] = res.dimensions?.split("x");
+    lenghtToBBKey = depth.match(/[A-Za-z]+/gi)[0];
+  }
   let wtToBBKey = res.weight?.match(/[A-Za-z]+/gi)[0];
   let publisher;
   publisher = res.publisher?.split(";")[0]?.split("(")[0]?.trim();
-  date = new Date(date.replace(".", "")); // temporary fix for unsupported dates like `20 Oct. 2021`
+  date = new Date(date?.replace(".", "")); // temporary fix for unsupported dates like `20 Oct. 2021`
   if (date instanceof Date && !isNaN(date)) {
     date = [date.getFullYear(), date.getMonth() + 1, date.getDate()]
       .map((component) => String(component).padStart(2, "0"))
@@ -120,7 +126,7 @@ function scrapeAmz() {
     depth: parseFloat(depth) * (convertToBB[lenghtToBBKey] ?? 1),
     date,
     publisher,
-    format,
+    format:format.includes('Kindle') ? 'eBook' : format,
   };
 }
 window.onload = () => {
@@ -130,7 +136,7 @@ window.onload = () => {
   }
   try {
     // Setting up UI
-    const submitUrl = "https://test.bookbrainz.org/edition/create";
+    const submitUrl = "https://beta.bookbrainz.org/edition/create";
     const parentEl = document.getElementById("rightCol");
     const askButton = document.createElement("button");
     const divContainer = document.createElement("div");
